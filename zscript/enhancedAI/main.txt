@@ -1,0 +1,25 @@
+class EnhancedAIHandler : EventHandler
+{
+	override void WorldThingSpawned(WorldEvent e)
+	{
+		if (e.Thing && e.Thing.bIsMonster)
+			e.Thing.GiveInventory("EnhancedAIScript", 1);
+	}
+}
+
+class EnhancedAIScript : Inventory
+{
+	override void BeginPlay()
+	{
+		super.BeginPlay();
+		countdown = -1; // -1 = "no countdown", to prevent repeated triggering of zero conditions
+	}
+
+	override void DoEffect()
+	{
+		super.DoEffect();
+		if(!owner) { return; }
+
+		SearchBehavior();
+	}
+}

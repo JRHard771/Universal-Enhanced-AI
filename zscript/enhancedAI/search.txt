@@ -1,0 +1,123 @@
+extend class EnhancedAIScript
+{
+	int AIMode;
+	array<actor> path;
+	actor oldTarget;
+	int countdown;
+	int seeTics;
+
+	enum modes
+	{
+		normal = 0,
+		chasing = 1,
+		searching = 2,
+	};
+
+	void SearchBehavior()
+	{
+		// Reset AI mode, clear path (if needed) and skip AI checks if dead
+		if(owner.health <= 0)
+		{
+			AIMode = normal;
+			if(path.size() > 0) { ClearPath(); }
+			return;
+		}
+
+		switch(AIMode)
+		{
+			// Standard AI mode, no changes to behavior
+			case normal:
+				if(!owner.target) { seeTics = 999999; return; }
+				if(path.size() > 0 && owner.target == path[0])
+				{
+					owner.A_ClearTarget();
+					ClearPath();
+					return;
+				}
+				if(owner.CheckIfTargetInLOS())
+				{
+					// Add to countdown while in LOS, up to 5 seconds
+					// as a sort of soft aggro-cooldown  before monsters
+					// switch to more passive goal chase.
+					countdown = clamp(countdown + 1, 35, 175);
+					pathPos = owner.target.pos;
+					pathHeading = owner.target.vel;
+					seeTics = 0;
+					break;
+				}
+				else
+					seeTics++;
+				if(countdown == 0)
+				{
+					//set 1-2 minutes for chase + search time.
+					countdown = random(60, 120) * 35;
+					owner.A_ClearTarget();
+					CreateSearchPath();
+					owner.target = path[0];
+					owner.goal = path[0];
+					owner.bchasegoal = true;
+					AIMode = chasing;
+					if(EAI_Debug >= 1) { console.printf(owner.getclassname().." switch to chasing"); }
+				}
+				break;
+			// Player LOS, set goal to last known position.
+			case chasing:
+				// Simple check to see if the monster has aquired another target.
+				if(owner.target != path[0] && !(owner.target is "EAI_PathNode"))
+				{
+					AIMode = normal;
+					owner.goal = null;
+					owner.bchasegoal = false;
+					if(EAI_Debug >= 1) { console.printf(owner.getclassname().." reacquired"); }
+				}
+				// Check if in search area or timer too low.
+				if(owner.Distance3D(path[0]) <= 64 || countdown <= (30 * 35))
+				{
+					if(path.size() > 1)
+					{
+						PopPath();
+						owner.target = path[0];
+						owner.goal = path[0];
+						countdown += 70;
+						if(EAI_Debug >= 1) { console.printf(owner.getclassname().." path marker reached; continuing"); }
+					}
+					else
+					{
+						owner.A_ClearTarget();
+						ClearPath();
+						owner.goal = null;
+						owner.bchasegoal = false;
+						AIMode = searching;
+						if(EAI_Debug >= 1) { console.printf(owner.getclassname().." switch to searching"); }
+					}
+				}
+				seeTics++;
+				break;
+			// Reached last position or search timer dropped too low. Wander in area.
+			case searching:
+				// Make intermittent calls to A_Wander.
+				if(countdown % 5 == 0)
+				{
+					owner.A_Wander();
+					if(EAI_Debug >= 1) { console.printf(owner.getclassname().." searching for "..(countdown/35)); }
+				}
+				// Another simple check to return to normal if monster gets a target.
+				if(owner.target)
+				{
+					AIMode = normal;
+					if(EAI_Debug >= 1) { console.printf(owner.getclassname().." reacquired"); }
+				}
+				// Finish the search and return to normal mode.
+				if(countdown <= 0)
+				{
+					AIMode = normal;
+					owner.A_ClearTarget();
+					owner.goal = null;
+					if(EAI_Debug >= 1) { console.printf(owner.getclassname().." gave up the search"); }
+				}
+				seeTics++;
+				break;
+		}
+		countdown = max(countdown - 1, -1);
+	}
+}

@@ -1,0 +1,6 @@
+version "3.5"
+
+#include "zscript/enhancedAI/main.txt"
+#include "zscript/enhancedAI/search.txt"
+#include "zscript/enhancedAI/path.txt"
+#include "zscript/enhancedAI/group.txt"

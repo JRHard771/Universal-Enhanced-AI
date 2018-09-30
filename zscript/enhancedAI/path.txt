@@ -1,0 +1,78 @@
+class EAI_PathNode : Actor
+{
+	Default
+	{
+		+NOINTERACTION;
+		+FLATSPRITE;
+		Radius 1;
+		Height 1;
+	}
+
+	States 
+	{
+	spawn:
+		TNT1 A 0 NoDelay
+		{
+			SetOrigin((pos.xy, floorz),false);
+			if(EAI_Debug >= 1) sprite = GetSpriteIndex('AMRK');
+		}
+		"####" A -1;
+		stop;
+	}
+}
+
+extend class EnhancedAIScript
+{
+	// pathPos: Position vector of the target when it was last detected.
+	// pathHeading: Velocity vector of the target when it was last detected.
+	vector3 pathPos, pathHeading;
+
+	// Clear this monster's path, deleting all path nodes in the path array and
+	// clearing the array.
+	void ClearPath()
+	{
+		for (int i = path.size() - 1; i >= 0; i--)
+			path[i].destroy();
+		path.clear();
+	}
+
+	// Push a new path node onto this monster's path array, which behaves as a
+	// first-in-last-out queue.
+	void PushPath(vector3 pathPos)
+	{
+		let newPoint = Actor.Spawn('EAI_PathNode', pathPos);
+		path.push(newPoint);
+	}
+
+	// Destroy the first path node in this monster's path array and delete its
+	// position in the array, causing the next node (if any) to become node 0.
+	void PopPath()
+	{
+		path[0].destroy();
+		path.delete(0);
+	}
+
+	// Creates a full search path for a monster that has lost sight of its
+	// target. Creates a node at pathPos, (pathPos + pathHeading * 17.5), and
+	// at six random positions stemming from the second node.
+	void CreateSearchPath()
+	{
+		if (pathHeading.length() == 0)
+			pathHeading = Vec3Angle(8.0, frandom(0,360), absolute: true);
+		else if (pathHeading.length() < 8.0)
+			pathHeading = pathHeading.unit() * 8.0;
+		double p_angle = VectorAngle(pathHeading.x, pathHeading.y);
+		FLineTraceData data;
+		ClearPath(); // Just in case
+		PushPath(pathPos);
+		path[0].LineTrace(p_angle,pathHeading.length()*17.5,0,TRF_THRUACTORS,25,0,0,data);
+		PushPath(path[0].pos + Vec3Angle(data.distance - 8, p_angle, 0, true));
+		for (int i = 0; i < 6; i++)
+		{
+			p_angle = frandom(0,360);
+			path[1].LineTrace(p_angle,pathHeading.length()*17.5,0,TRF_THRUACTORS,25,0,0,data);
+			PushPath(path[1].pos + Vec3Angle(data.distance - 8, p_angle, 0, true));
+		}
+		GetHelp();
+	}
+}

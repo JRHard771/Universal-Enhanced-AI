@@ -1,0 +1,57 @@
+extend class EnhancedAIScript
+{
+	BlockThingsIterator iterator;
+
+	void GetHelp()
+	{
+		iterator = BlockThingsIterator.Create(owner, 512);
+		Actor next;
+		while(iterator.Next())
+		{
+			next = iterator.Thing;
+			if (!next.bIsMonster || next.health <= 0 || next == owner || !next.IsVisible(owner,True)) continue;
+			
+			if(EAI_Debug >= 1) { console.printf(owner.getclassname().."[A] found ally "..next.getclassname().."[B]"); }
+			EnhancedAIScript nextAI = EnhancedAIScript(next.FindInventory('EnhancedAIScript'));
+			if (!nextAI || nextAI.seeTics < seeTics)
+			{
+				if(EAI_Debug >= 1) Console.PrintF("...but "..next.GetClassName().."[B] had better intel.");
+				continue;
+			}
+			if(EAI_Debug >= 1) { console.printf("...and shared intel with them!"); }
+			nextAI.seeTics = seeTics;
+			nextAI.pathPos = pathPos;
+			nextAI.pathHeading = pathHeading;
+			nextAI.countdown = random(60, 120) * 35;
+			next.A_ClearTarget();
+			nextAI.CreateGroupSearchPath(owner);
+			next.target = nextAI.path[0];
+			next.goal = nextAI.path[0];
+			next.bChaseGoal = true;
+			nextAI.AIMode = chasing;
+			if(EAI_Debug >= 1) { console.printf(next.getclassname().." switch to chasing"); }
+		}
+	}
+	
+	void CreateGroupSearchPath(Actor ally)
+	{
+		if (pathHeading.length() == 0)
+			pathHeading = Vec3Angle(8.0, frandom(0,360), absolute: true);
+		else if (pathHeading.length() < 8.0)
+			pathHeading = pathHeading.unit() * 8.0;
+		double p_angle = VectorAngle(pathHeading.x, pathHeading.y);
+		FLineTraceData data;
+		ClearPath(); // Just in case
+		if ((ally.pos - pathPos).length() < (owner.pos - pathPos).length())
+			PushPath(ally.pos);
+		PushPath(pathPos);
+		path[0].LineTrace(p_angle,pathHeading.length()*17.5,0,TRF_THRUACTORS,25,0,0,data);
+		PushPath(path[0].pos + Vec3Angle(data.distance - 8, p_angle, 0, true));
+		for (int i = 0; i < 6; i++)
+		{
+			p_angle = frandom(0,360);
+			path[1].LineTrace(p_angle,pathHeading.length()*17.5,0,TRF_THRUACTORS,25,0,0,data);
+			PushPath(path[1].pos + Vec3Angle(data.distance - 8, p_angle, 0, true));
+		}
+	}
+}
