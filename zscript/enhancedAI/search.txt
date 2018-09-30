@@ -13,6 +13,8 @@ extend class EnhancedAIScript
 		searching = 2,
 	};
 
+	// Original SearchBehavior() by Sterling Parker a.k.a. Caligari87
+	// Modified for Universal Enhanced AI by Joshua Hard a.k.a. josh771
 	void SearchBehavior()
 	{
 		// Reset AI mode, clear path (if needed) and skip AI checks if dead
