@@ -1,10 +1,8 @@
 extend class EnhancedAIScript
 {
-	BlockThingsIterator iterator;
-
 	void GetHelp()
 	{
-		iterator = BlockThingsIterator.Create(owner, 512);
+		BlockThingsIterator iterator = BlockThingsIterator.Create(owner, 512);
 		Actor next;
 		while(iterator.Next())
 		{
