@@ -40,17 +40,18 @@ extend class EnhancedAIScript
 		else if (pathHeading.length() < 8.0)
 			pathHeading = pathHeading.unit() * 8.0;
 		double p_angle = VectorAngle(pathHeading.x, pathHeading.y);
+		double path_mult = frandom(17.5, 52.5);
 		FLineTraceData data;
 		ClearPath(); // Just in case
 		if ((ally.pos - pathPos).length() < (owner.pos - pathPos).length())
 			PushPath(ally.pos);
 		PushPath(pathPos);
-		path[0].LineTrace(p_angle,pathHeading.length()*17.5,0,TRF_THRUACTORS,25,0,0,data);
+		path[0].LineTrace(p_angle,pathHeading.length()*path_mult,0,TRF_THRUACTORS,25,0,0,data);
 		PushPath(path[0].pos + Vec3Angle(data.distance - 8, p_angle, 0, true));
 		for (int i = 0; i < 6; i++)
 		{
 			p_angle = frandom(0,360);
-			path[1].LineTrace(p_angle,pathHeading.length()*17.5,0,TRF_THRUACTORS,25,0,0,data);
+			path[1].LineTrace(p_angle,pathHeading.length()*path_mult,0,TRF_THRUACTORS,25,0,0,data);
 			PushPath(path[1].pos + Vec3Angle(data.distance - 8, p_angle, 0, true));
 		}
 	}
