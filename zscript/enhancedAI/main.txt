@@ -20,6 +20,19 @@ class EnhancedAIScript : Inventory
 		super.DoEffect();
 		if(!owner) { return; }
 
-		SearchBehavior();
+		if(!PlayerPawn(owner))
+			SearchBehavior();
+		else
+		{
+			owner.RemoveInventory(self);
+			Destroy();
+		}
+	}
+	
+	States
+	{
+	Spawn:
+		TNT1 A 0;
+		Stop;
 	}
 }
