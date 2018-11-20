@@ -44,7 +44,14 @@ extend class EnhancedAIScript
 					countdown = clamp(countdown + 1, 35, 175);
 					pathPos = owner.target.pos;
 					pathHeading = owner.target.vel;
-					seeTics = 0;
+					if (owner.bAmbush) owner.bAmbush = false;
+					if (seeTics >= 18)
+					{
+						seeTics = 0;
+						GetHelp();
+					}
+					else
+						seeTics = 0;
 					break;
 				}
 				else

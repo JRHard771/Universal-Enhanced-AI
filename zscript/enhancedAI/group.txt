@@ -1,5 +1,12 @@
 extend class EnhancedAIScript
 {
+	bool HasDifferentTarget(Actor other)
+	{
+		if (other.target && !EAI_PathNode(other.target) && other.target != owner.target)
+			return true;
+		return false;
+	}
+
 	void GetHelp()
 	{
 		BlockThingsIterator iterator = BlockThingsIterator.Create(owner, 512);
@@ -7,11 +14,11 @@ extend class EnhancedAIScript
 		while(iterator.Next())
 		{
 			next = iterator.Thing;
-			if (!next.bIsMonster || next.health <= 0 || next == owner || !next.IsVisible(owner,True)) continue;
+			if (!next.bIsMonster || next.bAmbush || next.health <= 0 || next == owner || !next.IsVisible(owner,True)) continue;
 			
 			if(EAI_Debug >= 1) { console.printf(owner.getclassname().."[A] found ally "..next.getclassname().."[B]"); }
 			EnhancedAIScript nextAI = EnhancedAIScript(next.FindInventory('EnhancedAIScript'));
-			if (!nextAI || nextAI.seeTics < seeTics)
+			if (!nextAI || nextAI.seeTics < seeTics || HasDifferentTarget(next))
 			{
 				if(EAI_Debug >= 1) Console.PrintF("...but "..next.GetClassName().."[B] had better intel.");
 				continue;
