@@ -1,0 +1,17 @@
+AddOptionMenu "OptionsMenu"
+{
+	StaticText " "
+	Submenu "Universal Enhanced AI", "UEAIOptions"
+}
+
+OptionMenu "UEAIOptions"
+{
+	Title "Universal Enhanced AI Settings"
+	Option "Light-based Stealth", "EAI_Stealth", "onoff"
+	StaticText "Makes you harder to see in dark sectors and applies a shader to"
+	StaticText "the screen when you are well-hidden."
+	StaticText " "
+	Slider "Stealth Threshold", "EAI_StealthFactor", 24, 64, 8, 0
+	StaticText "Light level threshold for stealth detection. Higher values make"
+	StaticText "it easier to hide. Default is 24."
+}

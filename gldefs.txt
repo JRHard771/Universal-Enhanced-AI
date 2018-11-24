@@ -1,0 +1,6 @@
+HardwareShader PostProcess scene
+{
+	Name "stealthvision"
+	Shader "shaders/eai_stealth.fp" 330
+	Uniform float stealth
+}

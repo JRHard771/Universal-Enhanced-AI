@@ -5,6 +5,11 @@ class EnhancedAIHandler : EventHandler
 		if (e.Thing && e.Thing.bIsMonster)
 			e.Thing.GiveInventory("EnhancedAIScript", 1);
 	}
+	
+	override void PlayerEntered(PlayerEvent e)
+	{
+		players[e.PlayerNumber].mo.GiveInventory('EAI_StealthScript',1);
+	}
 }
 
 class EnhancedAIScript : Inventory

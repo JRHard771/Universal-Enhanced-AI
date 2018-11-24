@@ -1,1 +1,3 @@
 server bool EAI_Debug = false;
+server bool EAI_Stealth = true;
+server float EAI_StealthFactor = 24;

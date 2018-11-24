@@ -1,0 +1,69 @@
+// Adapted from Caligari87's Ugly as Sin Stealth Module for Hideous Destructor
+
+class EAI_StealthScript : Inventory {
+	int threshold;
+	int stealth;
+	int trueLightLevel;
+	DynamicLight currentLight;
+
+	default {
+		+INVENTORY.AUTOACTIVATE;
+		+INVENTORY.PERSISTENTPOWER;
+		+INVENTORY.UNTOSSABLE;
+	}
+
+	override void DoEffect() {
+		if (!owner || !owner.player) { return; }
+		if (!EAI_Stealth) { return; }
+
+		threshold = (EAI_StealthFactor / owner.player.crouchfactor) - owner.vel.length();
+
+		stealth -= clamp(GetLightLevel() - threshold, -5, 5);
+		stealth = clamp(stealth, 0, 100);
+
+		if (stealth == 100) {
+			owner.bSHADOW = true;
+		}
+		if (stealth == 0) {
+			owner.bSHADOW = false;
+		}
+		Shader.SetUniform1f(owner.player, "stealthvision", "stealth", double(stealth * 0.01));
+		Shader.SetEnabled(owner.player, "stealthvision", true);
+	}
+
+	int GetLightLevel() {
+		// Set up light iterator
+		ThinkerIterator LightFinder = ThinkerIterator.Create("DynamicLight", Thinker.STAT_DLIGHT);
+
+		// Initial "base" lightlevel
+		int trueLightLevel = owner.cursector.lightlevel;
+
+		// Iterate lights
+		while (currentLight = DynamicLight(LightFinder.Next())) {
+			if (!currentLight.CheckSight(owner)) { continue; } //Skip if the light isn't in LoS
+
+			vector3 posdiff = levellocals.Vec3Diff((owner.pos.x, owner.pos.y, owner.pos.z + (owner.height / 2)), currentlight.pos);
+			double currentDistance = posdiff.length(); //owner.Distance3D(currentLight);
+
+			double distanceFactor = currentDistance / (double(currentLight.args[DynamicLight.LIGHT_INTENSITY]+1) * 2);
+
+			double avgIntensity = (currentLight.args[DynamicLight.LIGHT_RED] +
+				currentLight.args[DynamicLight.LIGHT_GREEN] +
+				currentLight.args[DynamicLight.LIGHT_BLUE]) / 3;
+
+			avgIntensity *= 1.0 - distanceFactor;
+
+			if (currentlight.bSPOT) {
+				double offangle = abs(deltaangle(currentlight.AngleTo(owner), currentlight.angle));
+				if (offangle > currentlight.SpotInnerAngle) { avgIntensity *= 0.5; }
+				if (offangle > currentlight.SpotOuterAngle) { avgIntensity *= 0.1; }
+			}
+
+			if (currentDistance < owner.radius * 2) { avgIntensity *= 10; }
+
+			trueLightLevel = max(trueLightLevel, avgIntensity);
+		}
+		if (EAI_Debug >= 1) { owner.A_Log("Stealth "..stealth.." - LightLevel "..trueLightLevel.." - threshold "..threshold); }
+		return trueLightLevel;
+	}
+}
