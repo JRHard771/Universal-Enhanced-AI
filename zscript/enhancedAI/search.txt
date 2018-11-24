@@ -36,7 +36,7 @@ extend class EnhancedAIScript
 					ClearPath();
 					return;
 				}
-				if(owner.CheckIfTargetInLOS())
+				if(!owner.target.bSHADOW && owner.CheckIfTargetInLOS())
 				{
 					// Add to countdown while in LOS, up to 5 seconds
 					// as a sort of soft aggro-cooldown  before monsters
