@@ -6,6 +6,7 @@ class EAI_PathNode : Actor
 		+FLATSPRITE;
 		Radius 1;
 		Height 1;
+		Health 0;
 	}
 
 	States 
